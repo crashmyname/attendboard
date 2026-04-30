@@ -314,7 +314,7 @@ function renderTable(res) {
 function loadData() {
 
     $.ajax({
-        url: "http://localhost:3333/hr/api/v1/data/perdept/weekly/get",
+        url: "<?= env('API_DATA')?>",
         method: "POST",
         contentType: "application/json",
         data: JSON.stringify({
