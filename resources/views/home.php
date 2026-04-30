@@ -301,7 +301,7 @@ function renderTable(res) {
             })
 
             html += `
-                <td>${todayAtt.kode}</td>
+                <td>${todayAtt?.kode ?? '-'}</td>
                 <td>-</td>
             </tr>
             `
