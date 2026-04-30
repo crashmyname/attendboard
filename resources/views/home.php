@@ -62,9 +62,43 @@
 
         .blue { background-color: #206bc4; }
         .green { background-color: #2fb344; }
-        .yellow { background-color: #dcdc1a; }
+        .yellow { background-color: #fdfd13; }
         .orange { background-color: #fd7e14; }
         .red { background-color: #d63939; }
+
+        .table-striped > tbody > tr:nth-of-type(odd) > td {
+            background-color: unset;
+        }
+
+        /* default semua cell normal */
+        .table td {
+            background-color: #fff;
+        }
+
+        /* hanya kolom tanggal yang di-grey */
+        td.date-col:not(.today-col) {
+            background-color: #e9ecef !important;
+        }
+
+        /* kolom hari ini */
+        td.today-col {
+            background-color: #ffffff !important;
+            font-weight: bold;
+        }
+
+        thead th {
+            font-size: 14px !important;
+        }
+
+        #header-dates th {
+            font-size: 13px !important;
+            font-weight: 600;
+        }
+
+        #header-days th {
+            font-size: 12px !important;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -107,7 +141,7 @@
                         <h3 class="card-title">Attendance Board</h3>
                     </div>
                     <div class="table-responsive sticky-header" style="max-height: 75vh;">
-                        <table class="table table-vcenter table-bordered table-striped">
+                        <table class="table table-vcenter table-bordered">
                             <thead class="table-dark">
                                 <tr>
                                     <th rowspan="3">No</th>
@@ -119,25 +153,11 @@
                                     <th rowspan="3">Keterangan</th>
                                     <th rowspan="3">OT (Jam)</th>
                                 </tr>
-                                <tr>
-                                    <th>27/4/26</th>
-                                    <th>28/4/26</th>
-                                    <th>29/4/26</th>
-                                    <th>30/4/26</th>
-                                    <th>1/5/26</th>
-                                    <th>2/5/26</th>
-                                </tr>
-                                <tr>
-                                    <th>Senin</th>
-                                    <th>Selasa</th>
-                                    <th>Rabu</th>
-                                    <th>Kamis</th>
-                                    <th>Jumat</th>
-                                    <th>Sabtu</th>
-                                </tr>
+                                <tr id="header-dates"></tr>
+                                <tr id="header-days"></tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <!-- <tr>
                                     <td>1</td>
                                     <td>Fadli Azka Prayogi</td>
                                     <td>IT Support</td>
@@ -151,7 +171,7 @@
                                     <td><div class="status-indicator blue"></div></td>
                                     <td>Meeting dengan supplier</td>
                                     <td>2</td>
-                                </tr>
+                                </tr> -->
                             </tbody>
                         </table>
                     </div>
@@ -192,8 +212,6 @@
 
 function getWeekDates() {
     let today = new Date()
-
-    // cari hari senin
     let day = today.getDay()
     let diff = today.getDate() - day + (day === 0 ? -6 : 1)
 
@@ -215,6 +233,15 @@ function getWeekDates() {
     return dates
 }
 
+function formatDate(ymd) {
+    return `${ymd.slice(6,8)}/${ymd.slice(4,6)}/${ymd.slice(2,4)}`
+}
+
+function getDayName(ymd) {
+    let d = new Date(ymd.slice(0,4), ymd.slice(4,6)-1, ymd.slice(6,8))
+    return ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()]
+}
+
 let weekDates = getWeekDates()
 
 let today = new Date()
@@ -223,12 +250,28 @@ let mm = String(today.getMonth() + 1).padStart(2, '0')
 let dd = String(today.getDate()).padStart(2, '0')
 
 let todayYmd = `${yyyy}${mm}${dd}`
+let todayIndex = weekDates.indexOf(todayYmd)
 
+// RENDER HEADER DINAMIS
+function renderHeader() {
+    let headerDates = ''
+    let headerDays = ''
+
+    weekDates.forEach((date, i) => {
+        let cls = (i === todayIndex) ? 'today-col' : ''
+
+        headerDates += `<th class="${cls}">${formatDate(date)}</th>`
+        headerDays += `<th class="${cls}">${getDayName(date)}</th>`
+    })
+
+    $("#header-dates").html(headerDates)
+    $("#header-days").html(headerDays)
+}
+
+// RENDER TABLE
 function renderTable(res) {
 
     let html = ''
-
-    // 🔥 grouping by section
     let grouped = {}
 
     res.data.forEach(emp => {
@@ -240,10 +283,8 @@ function renderTable(res) {
 
     let no = 1
 
-    // 🔥 looping per section
     Object.keys(grouped).forEach(section => {
 
-        // HEADER SECTION
         html += `
             <tr>
                 <td colspan="13" style="text-align:left; font-weight:bold; background:#f1f3f5;">
@@ -252,19 +293,26 @@ function renderTable(res) {
             </tr>
         `
 
-        // DATA KARYAWAN
         grouped[section].forEach(emp => {
 
             let todayAtt = emp.attendance?.[todayYmd]
 
             let inDot = ''
             let outDot = ''
+            
+            if (!todayAtt) {
+                outDot = `<div class="status-indicator blue"></div>`
+            }
 
-            if (todayAtt?.jamMasuk && todayAtt.jamMasuk !== '-' && todayAtt.jamKeluar === '-') {
+            if (todayAtt && todayAtt.jamMasuk && todayAtt.jamMasuk !== '-' && todayAtt.jamKeluar === '-') {
                 inDot = `<div class="status-indicator blue"></div>`
             }
 
-            if (todayAtt?.jamKeluar && todayAtt.jamKeluar !== '-') {
+            if (todayAtt && todayAtt.jamKeluar && todayAtt.jamKeluar !== '-') {
+                outDot = `<div class="status-indicator blue"></div>`
+            }
+
+            if (todayAtt && todayAtt.kode === 'NC' || ['A1','A2','CT','SD','KK'].includes(todayAtt && todayAtt.kode)) {
                 outDot = `<div class="status-indicator blue"></div>`
             }
 
@@ -277,31 +325,28 @@ function renderTable(res) {
                 <td>${outDot}</td>
             `
 
-            weekDates.forEach(date => {
+            weekDates.forEach((date, i) => {
                 let att = emp.attendance?.[date]
 
-                if (att) {
+                let cls = (i === todayIndex) ? 'today-col' : ''
 
-                    let color = ''
+                let color = ''
 
-                    if (
-                        ['A1','A2','CT','SD','KK'].includes(att.kode)
-                    ) color = 'red'
-
-                    // if (att.kode === 'NC') color = 'yellow'
-
-                    html += `
-                        <td>
-                            <div class="status-indicator ${color}"></div>
-                        </td>
-                    `
-                } else {
-                    html += `<td></td>`
+                if (att && ['A1','A2','CT','SD','KK'].includes(att.kode)) {
+                    color = 'red'
                 }
+
+                html += `
+                    <td class="date-col ${cls}">
+                        ${att ? `<div class="status-indicator ${color}"></div>` : ''}
+                    </td>
+                `
             })
 
             html += `
-                <td>${todayAtt?.kode ?? '-'}</td>
+                <td class="${todayIndex !== -1 ? 'today-col' : ''}">
+                    ${todayAtt?.kode ?? '-'}
+                </td>
                 <td>-</td>
             </tr>
             `
@@ -309,10 +354,22 @@ function renderTable(res) {
     })
 
     $("tbody").html(html)
+
+    //  AUTO SCROLL KE HARI INI
+    setTimeout(() => {
+        let colIndex = todayIndex + 6
+        let container = document.querySelector('.table-responsive')
+
+        let cell = document.querySelector(`tbody tr td:nth-child(${colIndex})`)
+
+        if (cell && container) {
+            container.scrollLeft = cell.offsetLeft - 200
+        }
+    }, 300)
 }
 
+// LOAD DATA
 function loadData() {
-
     $.ajax({
         url: "<?= env('API_DATA')?>",
         method: "POST",
@@ -329,6 +386,8 @@ function loadData() {
 
 $("#deptSelect").on("change", loadData)
 
+// INIT
+renderHeader()
 loadData()
 
 </script>
