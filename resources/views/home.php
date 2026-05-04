@@ -99,6 +99,18 @@
             font-size: 12px !important;
             font-weight: 500;
         }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
@@ -137,6 +149,9 @@
             <!-- Main Table -->
             <div class="col-md-9">
                 <div class="card shadow-sm">
+                    <div class="loading-overlay d-none" id="loadingOverlay">
+                        <div class="spinner-border text-primary"></div>
+                    </div>
                     <div class="card-header">
                         <h3 class="card-title">Attendance Board</h3>
                     </div>
@@ -209,7 +224,16 @@
 </div>
 </body>
 <script>
-
+function getWeekDatesManual() {
+    return [
+        '20260413',
+        '20260414',
+        '20260415',
+        '20260416',
+        '20260417',
+        '20260418'
+    ]
+}
 function getWeekDates() {
     let today = new Date()
     let day = today.getDay()
@@ -347,7 +371,7 @@ function renderTable(res) {
                 <td class="${todayIndex !== -1 ? 'today-col' : ''}">
                     ${todayAtt?.kode ?? '-'}
                 </td>
-                <td>-</td>
+                <td>${emp?.calculateActOtMinutes ?? '-'}</td>
             </tr>
             `
         })
@@ -370,6 +394,7 @@ function renderTable(res) {
 
 // LOAD DATA
 function loadData() {
+    $("#loadingOverlay").removeClass("d-none")
     $.ajax({
         url: "<?= env('API_DATA')?>",
         method: "POST",
@@ -380,6 +405,12 @@ function loadData() {
         }),
         success: function(res) {
             renderTable(res)
+        },
+        error: function() {
+            alert("Gagal load data")
+        },
+        complete: function() {
+            $("#loadingOverlay").addClass("d-none")
         }
     })
 }

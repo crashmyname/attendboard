@@ -1,7 +1,8 @@
-[
-    "2025_06_30_131244_create_user_table.php",
-    "2026_04_23_093908_create_jobs_table.php",
-    "2026_04_27_021208_create_periods_table.php",
-    "2026_04_27_021318_create_status_colors_table.php",
-    "2026_04_27_021448_create_attendance_boards_table.php"
-]
+{
+    "5": "2025_06_30_131244_create_user_table.php",
+    "6": "2026_04_23_093908_create_jobs_table.php",
+    "7": "2026_04_27_021208_create_periods_table.php",
+    "8": "2026_04_27_021318_create_status_colors_table.php",
+    "9": "2026_04_27_021448_create_attendance_boards_table.php",
+    "10": "2026_04_30_100145_create_status_table.php"
+}
